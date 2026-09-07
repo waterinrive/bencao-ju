@@ -1,0 +1,248 @@
+import type { HerbCard } from '../shared/types.js';
+
+// 麻黄汤四味 + 通用解药池（覆盖全 12 功效 + 七情三对教学对）。
+// 功效覆盖：发汗解表(麻黄/桂枝) 辛凉解表(薄荷/柴胡副) 清热泻火(金银花/连翘/黄芩)
+//   温里散寒(干姜/附子) 补气(甘草/茯苓副) 补血(当归) 滋阴(麦冬) 理气(陈皮/川芎副)
+//   活血(川芎/当归副) 降逆平喘(杏仁) 利水渗湿(茯苓/海藻) 和解少阳(柴胡)
+// 七情教学对：相须(麻黄-桂枝/金银花-连翘/干姜-附子/柴胡-黄芩/当归-川芎)
+//   相恶(人参-莱菔子，削弱补气) 相反(甘草-海藻，十八反，同用生毒)
+// cost（心力）：平和0 / 中1 / 峻烈与大毒2；大毒另由「用即消耗 + 不佐则反伤满」罚则，cost 不再叠加（否则附子=3 吞整回合，四逆汤核心对附子-干姜相须卡死）。
+// 麻黄汤 2+1+1+0=4 > base3 → 逼跨回合攒方。
+export const HERBS: Record<string, HerbCard> = {
+  mahuang: {
+    name: '麻黄',
+    mainGongxiao: '发汗解表',
+    siqi: '温',
+    guiJing: ['肺', '膀胱'],
+    power: 12,
+    toxicity: 1, // 峻烈
+    cost: 2,
+    wuwei: '辛',
+    // ponytail: 医理上麻黄亦能平喘，此处刻意不设 subGongxiao，让杏仁独占"佐治咳喘兼证"的教学角色，"缺佐则咳喘不治"的痛感才干净。长期版可恢复。
+    peiwu: [{ drug: '桂枝', qing: '相须' }],
+    desc: '发汗解表第一药，开腠理、宣肺气。',
+  },
+  guizhi: {
+    name: '桂枝',
+    mainGongxiao: '发汗解表',
+    siqi: '温',
+    guiJing: ['心', '肺', '膀胱'],
+    power: 10,
+    toxicity: 0,
+    cost: 1,
+    wuwei: '辛甘',
+    peiwu: [{ drug: '麻黄', qing: '相须' }],
+    desc: '助麻黄发汗解表，温通经脉。',
+  },
+  xingren: {
+    name: '杏仁',
+    mainGongxiao: '降逆平喘',
+    siqi: '温',
+    guiJing: ['肺', '大肠'],
+    power: 8,
+    toxicity: 0,
+    cost: 1,
+    wuwei: '苦',
+    desc: '降气平喘，治风寒兼证咳喘。',
+  },
+  gancao: {
+    name: '甘草',
+    mainGongxiao: '补气',
+    siqi: '平',
+    guiJing: ['心', '肺', '脾', '胃'],
+    power: 5,
+    toxicity: 0,
+    cost: 0,
+    wuwei: '甘',
+    peiwu: [{ drug: '海藻', qing: '相反' }], // 十八反：甘草反海藻，同用生毒（教学用）
+    desc: '调和诸药，引经入肺，为使。反海藻。',
+  },
+  // —— 通用解药池 ——
+  jinyinhua: {
+    name: '金银花',
+    mainGongxiao: '清热泻火',
+    siqi: '寒',
+    guiJing: ['肺', '胃', '大肠'],
+    power: 10,
+    toxicity: 0,
+    cost: 1,
+    wuwei: '甘',
+    peiwu: [{ drug: '连翘', qing: '相须' }],
+    desc: '清热解毒，风热表证要药。',
+  },
+  lianqiao: {
+    name: '连翘',
+    mainGongxiao: '清热泻火',
+    siqi: '寒',
+    guiJing: ['心', '小肠'],
+    power: 9,
+    toxicity: 0,
+    cost: 1,
+    wuwei: '甘',
+    peiwu: [{ drug: '金银花', qing: '相须' }],
+    desc: '与金银花相须，清热解毒。',
+  },
+  bohe: {
+    name: '薄荷',
+    mainGongxiao: '辛凉解表',
+    siqi: '凉',
+    guiJing: ['肺', '肝'],
+    power: 9,
+    toxicity: 0,
+    cost: 0,
+    wuwei: '辛',
+    desc: '辛凉解表，疏风热、清头目。',
+  },
+  ganjiang: {
+    name: '干姜',
+    mainGongxiao: '温里散寒',
+    siqi: '热',
+    guiJing: ['脾', '胃', '肺'],
+    power: 9,
+    toxicity: 0,
+    cost: 1,
+    wuwei: '辛',
+    peiwu: [{ drug: '附子', qing: '相须' }],
+    desc: '温中散寒，回阳通脉。与附子相须。',
+  },
+  fuzi: {
+    name: '附子',
+    mainGongxiao: '温里散寒',
+    siqi: '热',
+    guiJing: ['心', '肾', '脾'],
+    power: 13,
+    toxicity: 2, // 大毒，峻烈
+    cost: 2,
+    wuwei: '辛',
+    peiwu: [{ drug: '干姜', qing: '相须' }],
+    desc: '大热回阳，温里散寒第一。大毒，须佐制，用即消耗。',
+  },
+  danggui: {
+    name: '当归',
+    mainGongxiao: '补血',
+    siqi: '温',
+    guiJing: ['心', '肝', '脾'],
+    power: 9,
+    toxicity: 0,
+    cost: 1,
+    wuwei: '甘辛',
+    subGongxiao: '活血',
+    peiwu: [{ drug: '川芎', qing: '相须' }],
+    desc: '补血活血，四物汤要药。与川芎相须。',
+  },
+  maidong: {
+    name: '麦冬',
+    mainGongxiao: '滋阴',
+    siqi: '寒',
+    guiJing: ['胃', '心', '肺'],
+    power: 8,
+    toxicity: 0,
+    cost: 1,
+    wuwei: '甘苦',
+    desc: '养阴生津，润肺清心。',
+  },
+  chenpi: {
+    name: '陈皮',
+    mainGongxiao: '理气',
+    siqi: '温',
+    guiJing: ['脾', '肺'],
+    power: 7,
+    toxicity: 0,
+    cost: 0,
+    wuwei: '辛苦',
+    desc: '理气健脾，燥湿化痰。',
+  },
+  chuanxiong: {
+    name: '川芎',
+    mainGongxiao: '活血',
+    siqi: '温',
+    guiJing: ['肝', '胆', '心包'],
+    power: 8,
+    toxicity: 0,
+    cost: 1,
+    wuwei: '辛',
+    subGongxiao: '理气', // 血中气药
+    peiwu: [{ drug: '当归', qing: '相须' }],
+    desc: '活血行气，血中气药。与当归相须。',
+  },
+  fuling: {
+    name: '茯苓',
+    mainGongxiao: '利水渗湿',
+    siqi: '平',
+    guiJing: ['心', '脾', '肾'],
+    power: 6,
+    toxicity: 0,
+    cost: 0,
+    wuwei: '甘',
+    subGongxiao: '补气', // 健脾
+    desc: '利水渗湿，健脾安神。',
+  },
+  chaihu: {
+    name: '柴胡',
+    mainGongxiao: '和解少阳',
+    siqi: '凉',
+    guiJing: ['肝', '胆'],
+    power: 8,
+    toxicity: 0,
+    cost: 1,
+    wuwei: '苦辛',
+    subGongxiao: '辛凉解表', // 透表退热
+    peiwu: [{ drug: '黄芩', qing: '相须' }],
+    desc: '和解少阳，透表退热。与黄芩相须（小柴胡核心对）。',
+  },
+  huangqin: {
+    name: '黄芩',
+    mainGongxiao: '清热泻火',
+    siqi: '寒',
+    guiJing: ['肺', '胆', '胃', '大肠'],
+    power: 9,
+    toxicity: 0,
+    cost: 1,
+    wuwei: '苦',
+    peiwu: [{ drug: '柴胡', qing: '相须' }],
+    desc: '清热泻火，善清上焦肺热。与柴胡相须。',
+  },
+  // —— 七情教学对（相恶/相反，让对应结算分支可演示）——
+  renshen: {
+    name: '人参',
+    mainGongxiao: '补气',
+    siqi: '温',
+    guiJing: ['脾', '肺', '心'],
+    power: 11,
+    toxicity: 0,
+    cost: 2,
+    wuwei: '甘微苦',
+    peiwu: [{ drug: '莱菔子', qing: '相恶' }], // 人参恶莱菔子：莱菔子削弱人参补气
+    desc: '大补元气。恶莱菔子（削弱补力）。',
+  },
+  laifuzi: {
+    name: '莱菔子',
+    mainGongxiao: '理气',
+    siqi: '平',
+    guiJing: ['脾', '胃', '肺'],
+    power: 5,
+    toxicity: 0,
+    cost: 0,
+    wuwei: '辛甘',
+    peiwu: [{ drug: '人参', qing: '相恶' }],
+    desc: '消食除满，理气降气。恶人参。',
+  },
+  haizao: {
+    name: '海藻',
+    mainGongxiao: '利水渗湿',
+    siqi: '寒',
+    guiJing: ['肝', '胃', '肾'],
+    power: 6,
+    toxicity: 0,
+    cost: 0,
+    wuwei: '咸',
+    peiwu: [{ drug: '甘草', qing: '相反' }], // 十八反：甘草反海藻
+    desc: '化痰软坚，利水。反甘草（十八反，同用生毒）。',
+  },
+};
+
+export const MAHUANG_TANG = ['mahuang', 'guizhi', 'xingren', 'gancao']; // 麻黄汤骨架
+
+// 各关牌池：教学关=麻黄汤4+通用干扰；今日BOSS关=通用池19。
+export const TEACHING_DECK = ['mahuang', 'guizhi', 'xingren', 'gancao', 'jinyinhua', 'lianqiao', 'chenpi', 'fuling'];
+export const GENERAL_DECK = Object.keys(HERBS);

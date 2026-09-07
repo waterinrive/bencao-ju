@@ -1,0 +1,33 @@
+{
+  "name": "bencao-ju",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "本草·局 — 中医方剂学卡牌策略对战（黑客松 demo）",
+  "scripts": {
+    "test": "tsx src/shared/selftest.ts",
+    "test:server": "tsx src/server/selftest.ts",
+    "gen:boss": "tsx --env-file=.env scripts/gen-today-boss.ts",
+    "dev:server": "tsx watch --env-file=.env src/server/index.ts",
+    "dev": "vite",
+    "start": "tsx --env-file=.env src/server/index.ts",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vite": "^8.2.2"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.1",
+    "cron": "^4.4.0",
+    "hono": "^4.13.7",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  }
+}

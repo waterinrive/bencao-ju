@@ -1,0 +1,19 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# deps
+node_modules/
+
+# build
+dist/
+build/
+
+# data (生成的今日 boss 缓存不入库，种子数据用 .ts 显式提交)
+data/today-boss.json
+
+# os/editor
+.DS_Store
+.vscode/
+*.log

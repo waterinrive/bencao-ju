@@ -1,0 +1,368 @@
+/* 本草·局 —— 满屏棋盘（炉石结构）× 三国杀画风 */
+@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink: #1f1a14; --paper: #f0e4c8; --paper-2: #e3d3b0;
+  --red: #9a2a1a; --red-deep: #6a1408;
+  --gold: #c2a05a; --gold-2: #8a6a32;
+  --qing: #2a5a5a; --jade: #3a6a4a;
+  --board: radial-gradient(ellipse at 50% 22%, #4a3826 0%, #2c1f12 55%, #140d06 100%);
+}
+body { font-family: "ZCOOL XiaoWei", "KaiTi", "STKaiti", "楷体", serif; color: var(--ink); background: #140d06; overflow: hidden; }
+.paper-tex { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.42 0 0 0 0 0.3 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* —— 棋盘容器：满屏 —— */
+.board {
+  position: relative; width: 100vw; height: 100vh; overflow: hidden;
+  background: var(--board);
+}
+.board::before { /* 中央桌面光晕 */
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 40% at 50% 48%, rgba(194,160,90,.10), transparent 70%);
+  pointer-events: none;
+}
+.board::after { /* 四角云纹水印 */
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cpath d='M10 60 q15 -30 30 0 t30 0 t30 0' stroke='%23c2a05a' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+}
+
+/* 顶栏（浮层） */
+.topbar {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 20;
+  display: flex; align-items: baseline; gap: 1rem; padding: 10px 18px;
+  border-bottom: 1px solid rgba(194,160,90,.4);
+  background: linear-gradient(180deg, rgba(20,13,6,.6), transparent);
+}
+.topbar h1 { font-family: "Ma Shan Zheng", serif; font-size: 1.8rem; color: var(--paper); letter-spacing: .2em; text-shadow: 0 2px 5px rgba(0,0,0,.6); }
+.topbar .sub { color: var(--paper-2); font-size: .9rem; }
+.topbar .sub b { color: var(--gold); }
+.topbtns { margin-left: auto; display: flex; gap: 8px; }
+
+/* 按钮 */
+.btn { font-family: inherit; font-size: .88rem; cursor: pointer; border-radius: 3px; padding: 6px 14px; border: 1px solid var(--gold); background: var(--paper); color: var(--ink); transition: all .12s; }
+.btn:hover { background: var(--gold); color: #fff; transform: translateY(-1px); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn.primary { background: var(--red); color: #fff; border-color: var(--red-deep); font-weight: bold; box-shadow: 0 0 10px rgba(154,42,26,.5); }
+.btn.primary:hover { background: var(--red-deep); }
+.btn.ghost { background: transparent; color: var(--paper-2); border-color: var(--gold); }
+.btn.ghost:hover { background: var(--gold); color: #fff; }
+.btn.small { padding: 2px 10px; font-size: .78rem; }
+
+/* —— 敌方区：BOSS 英雄肖像（顶部居中） —— */
+.enemy-zone { position: absolute; top: 56px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; flex-direction: column; align-items: center; }
+.boss-hero { position: relative; display: flex; flex-direction: column; align-items: center; cursor: help; }
+.boss-portrait {
+  width: 116px; height: 116px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, var(--red) 0%, var(--red-deep) 60%, #2a0a05 100%);
+  border: 4px solid var(--gold); box-shadow: 0 0 26px rgba(154,42,26,.5), inset 0 -6px 16px rgba(0,0,0,.4);
+  display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+}
+.boss-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.boss-portrait .seal { font-family: "Ma Shan Zheng", serif; font-size: 3.2rem; color: var(--paper); text-shadow: 0 2px 4px rgba(0,0,0,.5); }
+.boss-hero.hit .boss-portrait { animation: shake .4s; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+.boss-info { text-align: center; margin-top: 6px; }
+.boss-name { font-family: "Ma Shan Zheng", serif; font-size: 1.4rem; color: var(--paper); text-shadow: 0 1px 4px rgba(0,0,0,.7); }
+.boss-bagang { font-size: .76rem; color: var(--gold); }
+.boss-hpwrap { position: relative; width: 200px; height: 22px; margin-top: 6px; border-radius: 11px; background: #2a1208; border: 1px solid #5a2a14; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,.6); }
+.boss-hpfill { height: 100%; background: linear-gradient(180deg, #e8553a 0%, var(--red) 50%, var(--red-deep) 100%); transition: width .6s cubic-bezier(.2,.8,.2,1); box-shadow: 0 0 10px rgba(232,85,58,.55); }
+.boss-hptext { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,.85); font-size: .88rem; }
+.float-dmg { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); font-family: "Ma Shan Zheng", serif; font-size: 3rem; font-weight: bold; color: var(--red); text-shadow: 0 2px 6px rgba(0,0,0,.5), 0 0 2px #fff; animation: floatUp .95s ease-out forwards; pointer-events: none; z-index: 30; }
+@keyframes floatUp { 0%{opacity:0; transform:translateX(-50%) translateY(0) scale(.6)} 15%{opacity:1; transform:translateX(-50%) translateY(-12px) scale(1.25)} 100%{opacity:0; transform:translateX(-50%) translateY(-70px) scale(1)} }
+
+/* —— 玩家区（左下）：心力 + HP —— */
+.player-zone { position: absolute; left: 18px; bottom: 14px; z-index: 12; display: flex; flex-direction: column; gap: 6px; width: 180px; }
+.xinli-row { display: flex; gap: 4px; }
+.xinli { font-family: "Ma Shan Zheng", serif; font-size: 1.1rem; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--gold); background: rgba(60,40,20,.5); color: rgba(240,228,200,.25); }
+.xinli.on { background: radial-gradient(circle, #c8a24a, #8a6a32); color: #1a1108; box-shadow: 0 0 8px rgba(200,162,74,.6); }
+.player-hpwrap { position: relative; height: 20px; border-radius: 10px; background: #1a0a06; border: 1px solid #5a2a14; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,.6); }
+.player-hpfill { height: 100%; background: linear-gradient(180deg, #4aa860 0%, var(--jade) 50%, #1a4a2a 100%); transition: width .5s; }
+.player-hptext { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: .76rem; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,.85); }
+
+/* —— 牌库/弃牌（右下） —— */
+.piles { position: absolute; right: 18px; bottom: 14px; z-index: 12; display: flex; gap: 10px; }
+.pile { width: 56px; height: 72px; border-radius: 6px; border: 1px solid var(--gold); background: linear-gradient(160deg, #2c1f12, #140d06); display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 3px 8px rgba(0,0,0,.5); }
+.pile-n { font-family: "Ma Shan Zheng", serif; font-size: 1.5rem; color: var(--gold); }
+.pile-l { font-size: .64rem; color: var(--paper-2); opacity: .8; }
+.pile.exhaust { border-color: #8b1a1a; background: linear-gradient(160deg, #2a0a05, #140d06); }
+.pile.exhaust .pile-n { color: #d6382c; }
+
+/* BOSS 意图 */
+.boss-intent { font-size: .76rem; color: var(--gold); margin-top: 3px; }
+
+/* —— 战场：中央君臣佐使四槽位 —— */
+.battlefield { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 4; display: flex; gap: 22px; align-items: center; justify-content: center; }
+.slot {
+  width: 116px; height: 168px; border: 2px dashed rgba(194,160,90,.5); border-radius: 8px;
+  background: rgba(240,228,200,.05); cursor: pointer; transition: all .12s;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative;
+}
+.slot:hover { background: rgba(240,228,200,.12); border-color: var(--gold); }
+.slot.over { border-color: var(--gold); background: rgba(194,160,90,.22); box-shadow: 0 0 16px rgba(194,160,90,.6); transform: scale(1.05); }
+.slot.filled { border: none; background: transparent; }
+.slot-role { font-family: "Ma Shan Zheng", serif; font-size: 1.6rem; color: rgba(194,160,90,.55); }
+.slot-empty-hint { font-size: .7rem; color: rgba(240,228,200,.4); margin-top: 4px; }
+
+/* 七情配伍连线 */
+.qing-xiangfan { stroke: #d6382c; stroke-width: 3; stroke-dasharray: 7 4; animation: qingdash .8s linear infinite; filter: drop-shadow(0 0 4px rgba(214,56,44,.7)); }
+.qing-xiangwu { stroke: #8a7a5a; stroke-width: 2.5; stroke-dasharray: 5 3; opacity: .7; }
+.qing-xiangxu { stroke: #e8c46a; stroke-width: 3; opacity: .9; filter: drop-shadow(0 0 3px rgba(232,196,106,.6)); }
+.qing-other { stroke: #4a8a5a; stroke-width: 2; opacity: .65; }
+.qing-label { font-family: "ZCOOL XiaoWei", serif; font-size: 11px; fill: #f0e4c8; paint-order: stroke; stroke: #1f1a14; stroke-width: 3px; stroke-linejoin: round; }
+@keyframes qingdash { to { stroke-dashoffset: -22; } }
+
+/* 战场上的已出药卡（迷你版竖卡） */
+.board-card {
+  width: 116px; height: 168px; border-radius: 8px; overflow: hidden; position: relative;
+  border: 2px solid var(--gold); background: linear-gradient(170deg, var(--paper), var(--paper-2));
+  box-shadow: 0 6px 14px rgba(0,0,0,.5); display: flex; flex-direction: column;
+}
+.board-card .bc-art { flex: 1 1 60%; background: radial-gradient(ellipse at 50% 40%, rgba(154,42,26,.12), transparent 70%), linear-gradient(180deg, #ece0c4, #d8c4a0); display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--gold-2); position: relative; overflow: hidden; }
+.board-card .bc-art .art-char { font-family: "Ma Shan Zheng", serif; font-size: 2.8rem; color: var(--red-deep); }
+.board-card .bc-foot { padding: 3px 6px 5px; display: flex; flex-direction: column; gap: 2px; align-items: center; }
+.board-card .bc-name { font-family: "Ma Shan Zheng", serif; font-size: 1rem; color: var(--red-deep); }
+.board-card .bc-gx { font-size: .6rem; color: #fff; background: var(--red); padding: 0 4px; border-radius: 2px; }
+.board-card .bc-stat { display: flex; gap: 4px; align-items: center; margin-top: 1px; }
+.board-card .seal-num { width: 18px; height: 18px; border-radius: 50%; background: var(--red); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: .72rem; border: 1px solid var(--red-deep); }
+.board-card .seal-num.toxic { background: #5a0a0a; }
+.board-card .bc-siqi { font-size: .66rem; }
+
+/* —— 操作按钮条（战场上方） —— */
+.actions { position: absolute; top: calc(50% + 110px); left: 50%; transform: translateX(-50%); z-index: 6; display: flex; gap: 10px; }
+
+/* —— 弃换机制：补到5 + 甩废牌抽新牌 —— */
+.swap-hint { position: absolute; top: calc(50% + 158px); left: 50%; transform: translateX(-50%); z-index: 6; font-size: .76rem; color: var(--red); background: rgba(255,250,235,.92); border: 1px solid var(--red); border-radius: 14px; padding: 2px 14px; white-space: nowrap; animation: tutPulse 1.2s ease-in-out infinite; }
+.card-wrap.swappable .card { box-shadow: 0 0 0 2px var(--red), 0 0 16px rgba(154,42,26,.6); cursor: pointer; }
+.card-wrap.swappable .card:hover { transform: var(--fan, none) scale(1.12) rotate(-2deg); }
+.btn.swap-active { animation: tutPulse 1.1s ease-in-out infinite; }
+
+/* —— 角落浮层：战报（左）太医院（右） —— */
+.log-panel { position: absolute; left: 14px; top: 110px; width: 240px; max-height: 260px; overflow-y: auto; z-index: 8; }
+.mentor-panel { position: absolute; right: 14px; top: 110px; width: 240px; z-index: 8; }
+.side-panel { background: linear-gradient(160deg, rgba(240,228,200,.94), rgba(220,205,170,.92)); border: 1px solid var(--gold); border-radius: 6px; padding: 8px 12px; box-shadow: 0 4px 12px rgba(0,0,0,.35); }
+.side-panel h2 { font-family: "Ma Shan Zheng", serif; font-size: .98rem; color: var(--red-deep); display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.log { list-style: none; font-size: .82rem; line-height: 1.5; }
+.log li { margin: 1px 0; }
+.log .hurt { color: var(--red); font-weight: bold; }
+.mentor-hint { font-size: .84rem; line-height: 1.5; min-height: 40px; }
+.tag { display: inline-block; font-size: .62rem; padding: 1px 5px; border-radius: 2px; margin-right: 5px; vertical-align: middle; color: #fff; background: #8a6a3a; }
+.tag.zhida { background: var(--jade); }
+.tag.local { background: #8a6a3a; }
+.tag.err { background: var(--red); }
+
+/* —— 底部扇形手牌 —— */
+.hand-fan {
+  position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%);
+  width: 0; height: 0; z-index: 10;
+}
+.hand-fan .card-wrap { position: absolute; left: 0; bottom: 0; margin-left: -71px; pointer-events: none; }
+/* 卡牌：竖向长卡 + 扇形变换通过 --fan 变量注入 */
+.card {
+  width: 142px; aspect-ratio: 3 / 4.4;
+  background: linear-gradient(170deg, var(--paper) 0%, var(--paper-2) 100%);
+  border: 2px solid var(--gold); border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0,0,0,.45);
+  display: flex; flex-direction: column; overflow: hidden;
+  position: relative; cursor: grab; pointer-events: auto;
+  transform: var(--fan, none);
+  transition: transform .18s, box-shadow .18s, opacity .15s;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Cpath d='M1 1 H7 M1 1 V7' stroke='%23c2a05a' stroke-width='1.4' fill='none'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Cpath d='M13 1 H7 M13 1 V7' stroke='%23c2a05a' stroke-width='1.4' fill='none'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Cpath d='M1 13 H7 M1 13 V7' stroke='%23c2a05a' stroke-width='1.4' fill='none'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Cpath d='M13 13 H7 M13 13 V7' stroke='%23c2a05a' stroke-width='1.4' fill='none'/%3E%3C/svg%3E"),
+    linear-gradient(170deg, var(--paper) 0%, var(--paper-2) 100%);
+  background-position: 3px 3px, calc(100% - 3px) 3px, 3px calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), 0 0;
+  background-repeat: no-repeat;
+}
+.card:active { cursor: grabbing; }
+/* hover 只放大+发光，不上移——避免卡片逃出光标导致 popover 闪跳 */
+.card:hover { transform: var(--fan, none) scale(1.1); z-index: 50; box-shadow: 0 12px 26px rgba(0,0,0,.55), 0 0 16px rgba(194,160,90,.4); }
+.card.used { opacity: .28; pointer-events: none; filter: grayscale(.7); }
+.card.locked { pointer-events: none; }
+
+.card-art { flex: 1 1 58%; background: radial-gradient(ellipse at 50% 38%, rgba(154,42,26,.1), transparent 70%), linear-gradient(180deg, #ece0c4, #d8c4a0); border-bottom: 1px solid var(--gold-2); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.art-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.card-art::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: 3px; height: 6px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='6' viewBox='0 0 20 6'%3E%3Cpath d='M0 3 H6 M6 3 V1 H4 M10 3 H16 M16 3 V5 H14' stroke='%23c2a05a' stroke-width='.8' fill='none' opacity='.6'/%3E%3C/svg%3E"); background-repeat: repeat-x; opacity: .5; }
+.art-char { font-family: "Ma Shan Zheng", serif; font-size: 3.6rem; color: var(--red-deep); text-shadow: 0 1px 0 rgba(255,255,255,.45); line-height: 1; }
+.card-foot { padding: 5px 8px 6px; display: flex; flex-direction: column; gap: 3px; }
+.card-name { font-family: "Ma Shan Zheng", serif; font-size: 1.15rem; color: var(--red-deep); text-align: center; line-height: 1.1; }
+.seal-row { display: flex; gap: 3px; justify-content: center; flex-wrap: wrap; }
+.seal { font-size: .6rem; padding: 1px 5px; border-radius: 2px; color: #fff; background: var(--red); border: 1px solid var(--red-deep); letter-spacing: .05em; }
+.seal.sub { background: var(--qing); border-color: #1a3a3a; }
+.stat-row { display: flex; gap: 6px; align-items: center; justify-content: center; margin-top: 1px; }
+.seal-num { width: 20px; height: 20px; border-radius: 50%; background: var(--red); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: .78rem; border: 1px solid var(--red-deep); box-shadow: 0 0 3px rgba(154,42,26,.5); }
+.seal-num.toxic { background: #5a0a0a; box-shadow: 0 0 5px rgba(154,42,26,.7); }
+.siqi { font-size: .72rem; font-weight: bold; }
+.guijing { font-size: .64rem; color: #5a4a3a; text-align: center; border-top: 1px dotted #b8a890; padding-top: 2px; }
+.peiwu { font-size: .58rem; color: #7a5a3a; text-align: center; }
+
+/* 悬停详情面板 —— 锚定卡片正上方，展开动画 */
+.herb-tip { position: fixed; z-index: 60; background: linear-gradient(160deg, var(--paper) 0%, var(--paper-2) 100%); border: 2px solid var(--gold); border-radius: 6px; padding: 10px 12px; box-shadow: 0 8px 24px rgba(0,0,0,.55), inset 0 0 30px rgba(154,42,26,.06); font-family: "ZCOOL XiaoWei", serif; font-size: .82rem; line-height: 1.6; color: var(--ink); pointer-events: none; transform-origin: bottom center; animation: tipIn .16s ease-out; }
+@keyframes tipIn { 0% { opacity: 0; transform: translateY(-100%) scale(.86); } 100% { opacity: 1; transform: translateY(-100%) scale(1); } }
+.herb-tip .tip-pointer { position: absolute; bottom: -7px; width: 0; height: 0; transform: translateX(-50%); border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 7px solid var(--gold); }
+.herb-tip .tip-name { font-family: "Ma Shan Zheng", serif; font-size: 1.3rem; color: var(--red-deep); text-align: center; border-bottom: 1px solid var(--gold-2); padding-bottom: 4px; margin-bottom: 5px; }
+.herb-tip .tip-row { margin: 1px 0; }
+.herb-tip .tip-pw { margin-top: 4px; padding-top: 3px; border-top: 1px dotted #b8a890; font-size: .76rem; color: #5a3a2a; }
+.herb-tip .tip-desc { margin-top: 4px; padding-top: 3px; border-top: 1px dotted #b8a890; font-size: .78rem; color: #6a4a2a; font-style: italic; }
+
+/* 胜利遮罩 */
+.victory { position: fixed; inset: 0; background: rgba(20,12,6,.82); display: flex; align-items: center; justify-content: center; z-index: 100; animation: fadeIn .4s; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.vcard { background: linear-gradient(160deg, var(--paper), var(--paper-2)); border: 2px solid var(--gold); border-radius: 10px; padding: 28px 44px; text-align: center; box-shadow: 0 0 44px rgba(194,160,90,.6); }
+.vcard h2 { font-family: "Ma Shan Zheng", serif; color: var(--red); font-size: 2.4rem; margin-bottom: 8px; }
+.vcard p { color: var(--ink); margin-bottom: 18px; }
+
+/* —— BOSS 病证 flavor（临床描述） —— */
+.boss-flavor { font-size: .74rem; color: var(--paper-2); font-style: italic; max-width: 220px; margin: 4px auto 2px; line-height: 1.5; opacity: .9; text-align: center; }
+
+/* —— 兼证 chip —— */
+.jianzheng-row { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; margin-top: 5px; max-width: 220px; }
+.jz-chip { font-size: .66rem; padding: 1px 6px; border-radius: 10px; border: 1px solid #8a4a2a; background: rgba(154,42,26,.32); color: #f6dab8; line-height: 1.5; }
+.jz-chip sub { font-size: .58rem; opacity: .85; margin-left: 1px; }
+.jz-chip.cured { border-color: #3a6a4a; background: rgba(58,106,74,.4); color: #cfe8c0; text-decoration: line-through; }
+
+/* —— BOSS 意图配色 —— */
+.boss-intent.att { color: #e8553a; }
+.boss-intent.debuff { color: #b06ad8; }
+.boss-intent.worsen { color: #e8a83a; }
+.boss-intent.heal { color: #4aa860; }
+
+/* —— 生成日志面板"这关怎么来的" —— */
+.genlog-overlay { position: fixed; inset: 0; background: rgba(20,12,6,.6); z-index: 90; display: flex; align-items: center; justify-content: center; animation: fadeIn .2s; }
+.genlog { width: 440px; max-width: 90vw; max-height: 80vh; overflow-y: auto; background: linear-gradient(160deg, var(--paper) 0%, var(--paper-2) 100%); border: 2px solid var(--gold); border-radius: 8px; padding: 14px 18px; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+.genlog h2 { font-family: "Ma Shan Zheng", serif; color: var(--red-deep); font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.genlog-x { cursor: pointer; border: none; background: none; color: var(--red-deep); font-size: 1.1rem; }
+.genlog-lead { font-size: .8rem; color: #5a3a2a; font-style: italic; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dotted #b8a890; }
+.gl-row { display: flex; gap: 8px; font-size: .82rem; margin: 2px 0; line-height: 1.5; }
+.gl-k { flex: 0 0 44px; color: var(--gold-2); font-weight: bold; }
+.gl-v { color: var(--ink); }
+.gl-snippet { font-size: .8rem; color: #4a3a2a; line-height: 1.6; margin: 8px 0; padding: 6px 8px; border-left: 3px solid var(--gold); background: rgba(154,42,26,.06); font-style: italic; }
+.gl-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; padding-top: 6px; border-top: 1px dotted #b8a890; font-size: .76rem; }
+.gl-time { color: #6a5a3a; }
+.gl-link { color: var(--red); text-decoration: none; border-bottom: 1px dotted var(--red); }
+.gl-link:hover { opacity: .7; }
+
+/* —— 教学引导 —— */
+.tut-glow { animation: tutPulse 1.1s ease-in-out infinite; box-shadow: 0 0 0 3px var(--gold), 0 0 22px rgba(194,160,90,.85) !important; z-index: 55; }
+@keyframes tutPulse { 0%,100% { box-shadow: 0 0 0 3px var(--gold), 0 0 14px rgba(194,160,90,.55); } 50% { box-shadow: 0 0 0 3px var(--gold), 0 0 26px rgba(194,160,90,.95); } }
+
+.tut-banner {
+  position: absolute; bottom: 226px; left: 50%; transform: translateX(-50%);
+  width: 460px; max-width: 92vw; z-index: 70;
+  background: linear-gradient(160deg, rgba(240,228,200,.97), rgba(220,205,170,.95));
+  border: 2px solid var(--gold); border-radius: 8px; padding: 10px 16px;
+  box-shadow: 0 6px 22px rgba(0,0,0,.5);
+}
+.tut-prog { position: absolute; top: -10px; left: 14px; background: var(--red); color: #fff; font-size: .66rem; padding: 1px 8px; border-radius: 8px; }
+.tut-prog-bar { position: absolute; top: -3px; left: 0; right: 0; height: 3px; background: rgba(194,160,90,.25); border-radius: 2px; overflow: hidden; }
+.tut-prog-fill { height: 100%; background: linear-gradient(90deg, var(--gold-2), var(--red)); transition: width .4s ease; }
+.tut-text { font-size: .92rem; line-height: 1.6; color: var(--ink); text-align: center; }
+.tut-text b, .tut-text span { color: var(--red-deep); }
+.tut-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+.tut-wait { font-size: .76rem; color: var(--gold-2); font-style: italic; }
+
+/* 成就感弹屏：正确操作后的金光反馈 */
+.tut-celebrate {
+  position: fixed; top: 38%; left: 50%; transform: translate(-50%, -50%);
+  z-index: 90; pointer-events: none;
+  font-family: "Ma Shan Zheng", serif; font-size: 1.9rem;
+  color: var(--gold-2); text-shadow: 0 0 18px rgba(194,160,90,.95), 0 2px 4px rgba(0,0,0,.5);
+  animation: celebratePop 1.8s ease-out forwards;
+  white-space: nowrap;
+}
+@keyframes celebratePop {
+  0% { opacity: 0; transform: translate(-50%, -30%) scale(.6); }
+  18% { opacity: 1; transform: translate(-50%, -50%) scale(1.12); }
+  30% { transform: translate(-50%, -50%) scale(1); }
+  78% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -64%) scale(1); }
+}
+
+/* —— 模式入口菜单 —— */
+.menu-overlay { position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 40%, #2c1f12 0%, #140d06 100%); display: flex; align-items: center; justify-content: center; z-index: 200; }
+.menu-card { text-align: center; padding: 36px 56px; border: 2px solid var(--gold); border-radius: 12px; background: linear-gradient(160deg, var(--paper), var(--paper-2)); box-shadow: 0 0 50px rgba(194,160,90,.5); max-width: 92vw; }
+.menu-card h1 { font-family: "Ma Shan Zheng", serif; font-size: 3.4rem; color: var(--red); letter-spacing: .25em; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0,0,0,.2); }
+.menu-sub { color: #6a4a2a; font-size: .88rem; margin-bottom: 26px; }
+.menu-btns { display: flex; gap: 18px; justify-content: center; }
+.menu-btns .btn { flex: 0 1 200px; min-height: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.3; font-size: 1rem; }
+.menu-btns .btn small { font-size: .66rem; opacity: .85; font-weight: normal; margin-top: 3px; }
+.menu-hint { margin-top: 20px; font-size: .76rem; color: var(--gold-2); font-style: italic; }
+
+/* —— 方剂诊断：把“我现在该做什么”放到战场旁 —— */
+.formula-coach {
+  position: absolute; right: 274px; top: 50%; transform: translateY(-50%); z-index: 8;
+  width: 280px; padding: 11px 14px; border: 1px solid rgba(194,160,90,.72); border-radius: 9px;
+  background: linear-gradient(145deg, rgba(240,228,200,.96), rgba(220,205,170,.94));
+  box-shadow: 0 8px 24px rgba(0,0,0,.24), inset 0 1px rgba(255,255,255,.45);
+}
+.coach-head { display:flex; justify-content:space-between; align-items:center; color:var(--red-deep); font-family:"Ma Shan Zheng",serif; font-size:1.08rem; }
+.coach-head b { font-family:inherit; color:var(--gold-2); font-size:.82rem; }
+.coach-meter { height:5px; margin:7px 0 9px; border-radius:9px; background:#c7b58f; overflow:hidden; }
+.coach-meter span { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--gold-2),var(--red)); transition:width .35s ease; }
+.coach-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; text-align:center; }
+.coach-grid div { padding:5px 2px; border:1px solid rgba(138,106,50,.26); border-radius:5px; background:rgba(255,255,255,.24); }
+.coach-grid small { display:block; color:#7a6241; font-size:.67rem; }
+.coach-grid strong { display:block; color:var(--ink); font-size:1rem; }
+.coach-grid strong.warn { color:var(--red); }
+.coach-checks { display:flex; flex-direction:column; gap:3px; margin-top:9px; color:#725f45; font-size:.72rem; }
+.coach-checks .ok { color:var(--jade); font-weight:bold; }
+.coach-checks .warn { color:var(--red); font-weight:bold; }
+.coach-tip { margin-top:8px; padding-top:7px; border-top:1px dashed rgba(138,106,50,.4); color:#6e5131; font-size:.72rem; line-height:1.35; }
+@media (max-width: 900px) {
+  .formula-coach { left:50%; right:auto; top:auto; bottom:168px; transform:translateX(-50%); width:min(280px, calc(100vw - 32px)); }
+  .side-panel { display:none; }
+  .topbar .sub { display:none; }
+}
+@media (max-width: 600px) {
+  .topbar { padding:8px 10px; }
+  .topbar h1 { font-size:1.35rem; }
+  .topbtns { gap:4px; }
+  .topbtns .btn { padding:4px 7px; font-size:.7rem; }
+  .enemy-zone { top:48px; transform:translateX(-50%) scale(.82); transform-origin:top center; }
+  .battlefield { top:235px; transform:scale(.78); transform-origin:top center; }
+  .actions { bottom:116px; gap:4px; flex-wrap:wrap; }
+  .actions .btn { padding:5px 8px; font-size:.72rem; }
+  .formula-coach { bottom:158px; transform:translateX(-50%) scale(.88); transform-origin:bottom center; }
+}
+
+/* v2 layout correction: keep every interactive layer in its own lane */
+.battlefield { top: 53%; gap: 18px; }
+.formula-coach {
+  right: auto; left: 50%; top: 36%; transform: translateX(-50%);
+  width: 520px; padding: 8px 14px; display: grid; grid-template-columns: 118px 1fr 1.2fr; gap: 12px; align-items: center;
+}
+.coach-head { display:flex; flex-direction:column; align-items:flex-start; line-height:1.05; }
+.coach-meter { margin: 5px 0 0; width: 100%; }
+.coach-grid { gap: 4px; }
+.coach-checks { margin-top: 0; display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
+.coach-tip { margin:0; padding:0 0 0 10px; border-top:0; border-left:1px dashed rgba(138,106,50,.4); }
+.tut-banner { left: 18px; bottom: auto; top: 92px; transform:none; width: 360px; padding: 9px 13px; }
+.tut-text { font-size: .84rem; text-align:left; line-height:1.45; }
+.tut-foot { margin-top:5px; }
+.hand-fan { bottom: 2px; }
+.card { width: 122px; }
+.hand-fan .card-wrap { margin-left: -61px; }
+@media (max-width: 1100px) {
+  .formula-coach { width: min(520px, calc(100vw - 420px)); left: auto; right: 14px; top: 350px; transform:none; grid-template-columns: 1fr; gap: 5px; }
+  .coach-checks { grid-template-columns:1fr; }
+  .coach-tip { padding:5px 0 0; border-left:0; border-top:1px dashed rgba(138,106,50,.4); }
+}
+@media (max-width: 900px) {
+  .formula-coach { left:50%; right:auto; top:auto; bottom:170px; transform:translateX(-50%); width:min(360px, calc(100vw - 24px)); display:block; }
+  .coach-head { flex-direction:row; align-items:center; justify-content:space-between; }
+  .coach-meter { margin:5px 0; }
+  .coach-grid { margin-top:5px; }
+  .coach-checks { display:flex; flex-direction:row; flex-wrap:wrap; margin-top:6px; }
+  .coach-tip { margin-top:5px; padding:5px 0 0; border-left:0; border-top:1px dashed rgba(138,106,50,.4); }
+  .tut-banner { left:50%; top:72px; transform:translateX(-50%); width:min(420px, calc(100vw - 24px)); }
+  .battlefield { top: 42%; transform:translate(-50%, -50%) scale(.86); }
+}
+@media (max-width: 600px) {
+  .battlefield { top: 38%; transform:translate(-50%, -50%) scale(.68); }
+  .formula-coach { bottom:155px; transform:translateX(-50%) scale(.82); transform-origin:bottom center; }
+  .card { width: 108px; }
+  .hand-fan .card-wrap { margin-left:-54px; }
+  .hand-fan { transform:translateX(-50%) scale(.9); transform-origin:bottom center; }
+}
