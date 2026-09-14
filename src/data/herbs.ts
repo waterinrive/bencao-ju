@@ -239,6 +239,19 @@ export const HERBS: Record<string, HerbCard> = {
     peiwu: [{ drug: '甘草', qing: '相反' }], // 十八反：甘草反海藻
     desc: '化痰软坚，利水。反甘草（十八反，同用生毒）。',
   },
+  fuzi: {
+    name: '附子',
+    mainGongxiao: '回阳救逆',
+    subGongxiao: '散寒止痛',
+    siqi: '热',
+    guiJing: ['心', '肾', '脾'],
+    power: 14,
+    toxicity: 3, // 大毒，入药多炮制
+    cost: 3,
+    wuwei: '辛·甘',
+    peiwu: [{ drug: '甘草', qing: '相畏' }, { drug: '半夏', qing: '相反' }], // 甘草制其毒；十八反：半蒌贝蔹攻乌
+    desc: '回阳救逆第一品，大辛大热通行十二经，生用有毒。',
+  },
 };
 
 export const MAHUANG_TANG = ['mahuang', 'guizhi', 'xingren', 'gancao']; // 麻黄汤骨架

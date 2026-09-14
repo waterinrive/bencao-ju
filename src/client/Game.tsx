@@ -142,6 +142,7 @@ export function Game() {
   const [showGenLog, setShowGenLog] = useState(false);
   const [cured, setCured] = useState<Set<string>>(new Set());
   const [tip, setTip] = useState<{ herb: HerbCard; x: number; y: number; w: number } | null>(null);
+  const [peek, setPeek] = useState<string | null>(null); // 触屏无 hover：第一次点牌=抬起看全貌+详情，第二次点才打出
   const [swapping, setSwapping] = useState(false);    // 弃换模式：点手牌=弃1抽1
   const [swapsLeft, setSwapsLeft] = useState(SWAP_CAP);
   const [bossTip, setBossTip] = useState<{ x: number; y: number } | null>(null);
@@ -554,9 +555,13 @@ export function Game() {
           return (
             <div className={`card-wrap ${swapping ? 'swappable' : ''}`} key={i + '-' + key}>
               <HerbCardView herbKey={key} herb={h}
-                onClick={() => place(key)} disabled={!!over || (!swapping && xinli < (h.cost ?? 1))}
+                onClick={(rect) => {
+                  if (window.matchMedia('(hover: none)').matches && peek !== key) { setPeek(key); setTip({ herb: h, x: rect.left, y: rect.top, w: rect.width }); return; }
+                  setPeek(null); setTip(null); place(key);
+                }}
+                disabled={!!over || (!swapping && xinli < (h.cost ?? 1))}
                 onHover={(rect) => setTip({ herb: h, x: rect.left, y: rect.top, w: rect.width })}
-                onLeave={() => setTip(null)} fan={fan} glow={tutGlow?.card === key}
+                onLeave={() => setTip(null)} fan={fan} peeked={peek === key} glow={tutGlow?.card === key}
               />
             </div>
           );
@@ -703,16 +708,16 @@ function Slot({ role, herb, herbKey, onClick, onDrop, glow }: { role: Role; herb
   );
 }
 
-function HerbCardView({ herbKey, herb, onClick, disabled, onHover, onLeave, fan, glow }: { herbKey: string; herb: HerbCard; onClick: () => void; disabled?: boolean; onHover: (rect: DOMRect) => void; onLeave: () => void; fan?: string; glow?: boolean }) {
+function HerbCardView({ herbKey, herb, onClick, disabled, onHover, onLeave, fan, peeked, glow }: { herbKey: string; herb: HerbCard; onClick: (rect: DOMRect) => void; disabled?: boolean; onHover: (rect: DOMRect) => void; onLeave: () => void; fan?: string; peeked?: boolean; glow?: boolean }) {
   const qcol = SIQI_COLOR[herb.siqi] ?? '#6a6a6a';
   const draggable = !disabled;
   return (
     <div
-      className={`card ${disabled ? 'locked' : ''} ${glow ? 'tut-glow' : ''}`}
+      className={`card ${disabled ? 'locked' : ''} ${peeked ? 'peeked' : ''} ${glow ? 'tut-glow' : ''}`}
       style={fan ? ({ '--fan': fan } as Record<string, string>) : undefined}
       draggable={draggable}
       onDragStart={(e) => { if (!draggable) { e.preventDefault(); return; } e.dataTransfer.setData('text/plain', herbKey); e.dataTransfer.effectAllowed = 'move'; onLeave(); }}
-      onClick={disabled ? undefined : onClick}
+      onClick={disabled ? undefined : (e) => onClick(e.currentTarget.getBoundingClientRect())}
       onMouseEnter={(e) => onHover(e.currentTarget.getBoundingClientRect())}
       onMouseLeave={onLeave}
     >  <div className="card-art">

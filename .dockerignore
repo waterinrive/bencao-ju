@@ -1,0 +1,15 @@
+node_modules
+dist
+build
+.git
+.codegraph
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.vscode
+本草局-两版.zip
+data/today-boss.json
+Dockerfile
+.dockerignore
