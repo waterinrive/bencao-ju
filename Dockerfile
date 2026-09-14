@@ -17,7 +17,7 @@ RUN pnpm build            # vite build → dist/
 # ---------- runtime ----------
 FROM ${NODE_IMAGE}
 ARG NPM_REGISTRY
-ENV PORT=3000 \
+ENV PORT=7860 \
     COREPACK_NPM_REGISTRY=${NPM_REGISTRY}
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate \
  && pnpm config set registry ${NPM_REGISTRY}
